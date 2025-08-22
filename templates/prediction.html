@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header Section -->
+    <div class="text-center mb-12 animate-fade-in">
+        <div class="flex items-center justify-center mb-6">
+            <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mr-4">
+                <i class="fas fa-chart-area text-2xl text-white"></i>
+            </div>
+            <div class="text-left">
+                <h1 class="text-4xl font-bold text-white">{{ symbol }} Analysis Complete</h1>
+                <p class="text-gray-300 text-lg">Professional trading analysis powered by AI</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 animate-slide-up">
+        <!-- Current Price Card -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 text-center card-hover">
+            <div class="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-dollar-sign text-blue-400 text-xl"></i>
+            </div>
+            <h3 class="text-gray-300 text-sm font-semibold mb-2 uppercase tracking-wide">Current Price</h3>
+            <p class="text-4xl font-bold text-white mb-2">${{ "%.2f"|format(current_price) }}</p>
+            <p class="text-sm text-gray-400">Last trading session</p>
+        </div>
+
+        <!-- Predicted Price Card -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 text-center card-hover">
+            <div class="w-12 h-12 bg-green-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-magic text-green-400 text-xl"></i>
+            </div>
+            <h3 class="text-gray-300 text-sm font-semibold mb-2 uppercase tracking-wide">AI Prediction (30 Days)</h3>
+            <p class="text-4xl font-bold text-white mb-2">${{ "%.2f"|format(predicted_price) }}</p>
+            <p class="text-sm text-gray-400">LSTM Neural Network Forecast</p>
+        </div>
+
+        <!-- Change Percentage Card -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 text-center card-hover">
+            <div class="w-12 h-12 {% if change_percent > 0 %}bg-green-600/20{% else %}bg-red-600/20{% endif %} rounded-xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas {% if change_percent > 0 %}fa-arrow-up text-green-400{% else %}fa-arrow-down text-red-400{% endif %} text-xl"></i>
+            </div>
+            <h3 class="text-gray-300 text-sm font-semibold mb-2 uppercase tracking-wide">Expected Change</h3>
+            <p class="text-4xl font-bold {% if change_percent > 0 %}text-green-400{% else %}text-red-400{% endif %} mb-2">
+                {% if change_percent > 0 %}+{% endif %}{{ "%.2f"|format(change_percent) }}%
+            </p>
+            <p class="text-sm text-gray-400">30-day projection</p>
+        </div>
+    </div>
+
+    <!-- Market Sentiment Indicator -->
+    <div class="mb-12 animate-slide-up">
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+            <h3 class="text-2xl font-bold text-white mb-6 text-center">
+                <i class="fas fa-brain text-purple-400 mr-3"></i>AI Market Sentiment
+            </h3>
+            <div class="flex items-center justify-center space-x-8">
+                <div class="text-center">
+                    {% if change_percent > 5 %}
+                        <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-smile text-white text-2xl"></i>
+                        </div>
+                        <p class="text-green-400 font-bold">Very Bullish</p>
+                        <p class="text-gray-400 text-sm">Strong upward trend expected</p>
+                    {% elif change_percent > 0 %}
+                        <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-thumbs-up text-white text-2xl"></i>
+                        </div>
+                        <p class="text-blue-400 font-bold">Bullish</p>
+                        <p class="text-gray-400 text-sm">Positive growth anticipated</p>
+                    {% elif change_percent > -5 %}
+                        <div class="w-16 h-16 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-minus text-white text-2xl"></i>
+                        </div>
+                        <p class="text-yellow-400 font-bold">Neutral</p>
+                        <p class="text-gray-400 text-sm">Slight downward pressure</p>
+                    {% else %}
+                        <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-arrow-down text-white text-2xl"></i>
+                        </div>
+                        <p class="text-red-400 font-bold">Bearish</p>
+                        <p class="text-gray-400 text-sm">Significant decline expected</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="space-y-12">
+        <!-- Historical Price Chart -->
+        <div class="animate-slide-up">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
+                <div class="p-6 border-b border-white/10">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-bold text-white">
+                            <i class="fas fa-chart-line text-blue-400 mr-3"></i>Historical Price Movement
+                        </h3>
+                        <div class="flex items-center space-x-4 text-sm text-gray-400">
+                            <span><i class="fas fa-calendar mr-1"></i>Historical Analysis</span>
+                            <span><i class="fas fa-database mr-1"></i>Yahoo Finance</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4 grid grid-cols-3 gap-4 text-center">
+                        <div class="bg-blue-600/10 rounded-lg p-3">
+                            <p class="text-blue-400 text-sm">Lowest Price</p>
+                            <p class="text-white font-bold text-lg">${{ "%.2f"|format(historical_chart_data.min_price) }}</p>
+                        </div>
+                        <div class="bg-green-600/10 rounded-lg p-3">
+                            <p class="text-green-400 text-sm">Average Price</p>
+                            <p class="text-white font-bold text-lg">${{ "%.2f"|format(historical_chart_data.avg_price) }}</p>
+                        </div>
+                        <div class="bg-purple-600/10 rounded-lg p-3">
+                            <p class="text-purple-400 text-sm">Highest Price</p>
+                            <p class="text-white font-bold text-lg">${{ "%.2f"|format(historical_chart_data.max_price) }}</p>
+                        </div>
+                    </div>
+                    <div class="chart-container bg-white/5 rounded-lg p-4">
+                        <canvas id="historicalChart" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Predictions Chart -->
+        <div class="animate-slide-up">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
+                <div class="p-6 border-b border-white/10">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-bold text-white">
+                            <i class="fas fa-crystal-ball text-purple-400 mr-3"></i>AI Price Predictions (Next 30 Days)
+                        </h3>
+                        <div class="flex items-center space-x-4 text-sm text-gray-400">
+                            <span><i class="fas fa-brain mr-1"></i>LSTM Neural Network</span>
+                            <span><i class="fas fa-clock mr-1"></i>30-Day Forecast</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4 grid grid-cols-3 gap-4 text-center">
+                        <div class="bg-purple-600/10 rounded-lg p-3">
+                            <p class="text-purple-400 text-sm">Lowest Prediction</p>
+                            <p class="text-white font-bold text-lg">${{ "%.2f"|format(prediction_chart_data.min_price) }}</p>
+                        </div>
+                        <div class="bg-blue-600/10 rounded-lg p-3">
+                            <p class="text-blue-400 text-sm">Average Prediction</p>
+                            <p class="text-white font-bold text-lg">${{ "%.2f"|format(prediction_chart_data.avg_price) }}</p>
+                        </div>
+                        <div class="bg-green-600/10 rounded-lg p-3">
+                            <p class="text-green-400 text-sm">Highest Prediction</p>
+                            <p class="text-white font-bold text-lg">${{ "%.2f"|format(prediction_chart_data.max_price) }}</p>
+                        </div>
+                    </div>
+                    <div class="chart-container bg-white/5 rounded-lg p-4">
+                        <canvas id="predictionChart" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Combined Analysis Chart -->
+        <div class="animate-slide-up">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
+                <div class="p-6 border-b border-white/10">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-bold text-white">
+                            <i class="fas fa-chart-area text-yellow-400 mr-3"></i>Combined Analysis & Trend
+                        </h3>
+                        <div class="flex items-center space-x-4 text-sm text-gray-400">
+                            <span><i class="fas fa-analytics mr-1"></i>Historical + AI Forecast</span>
+                            <span><i class="fas fa-trending-up mr-1"></i>Trend Analysis</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="chart-container bg-white/5 rounded-lg p-4">
+                        <canvas id="combinedChart" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Price Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 animate-slide-up mt-12">
+        <!-- Historical Statistics -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+            <h4 class="text-xl font-bold text-white mb-4">
+                <i class="fas fa-chart-bar text-blue-400 mr-2"></i>Historical Statistics
+            </h4>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Average Price:</span>
+                    <span class="text-white font-semibold">${{ "%.2f"|format(historical_stats.avg_price) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Price Range:</span>
+                    <span class="text-white font-semibold">${{ "%.2f"|format(historical_stats.min_price) }} - ${{ "%.2f"|format(historical_stats.max_price) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Volatility:</span>
+                    <span class="text-white font-semibold">{{ "%.2f"|format(historical_stats.volatility) }}%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Data Points:</span>
+                    <span class="text-white font-semibold">{{ historical_chart_data.labels|length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Statistics -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+            <h4 class="text-xl font-bold text-white mb-4">
+                <i class="fas fa-magic text-purple-400 mr-2"></i>Prediction Statistics
+            </h4>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Predicted Range:</span>
+                    <span class="text-white font-semibold">${{ "%.2f"|format(prediction_stats.min_prediction) }} - ${{ "%.2f"|format(prediction_stats.max_prediction) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Average Prediction:</span>
+                    <span class="text-white font-semibold">${{ "%.2f"|format(prediction_stats.avg_prediction) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Trend Direction:</span>
+                    <span class="text-white font-semibold capitalize {% if prediction_stats.trend == 'bullish' %}text-green-400{% elif prediction_stats.trend == 'bearish' %}text-red-400{% else %}text-yellow-400{% endif %}">
+                        {{ prediction_stats.trend }}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Forecast Days:</span>
+                    <span class="text-white font-semibold">{{ prediction_chart_data.labels|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="text-center mt-12 space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center animate-slide-up">
+        <a href="{{ url_for('index') }}" 
+           class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+            <i class="fas fa-arrow-left mr-3"></i>Analyze Another Stock
+        </a>
+        <button onclick="window.print()" 
+                class="inline-flex items-center px-8 py-4 bg-gray-600/20 hover:bg-gray-600/40 text-gray-300 hover:text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 border border-gray-500/30">
+            <i class="fas fa-download mr-3"></i>Save Report
+        </button>
+    </div>
+</div>
+
+<!-- Chart.js Rendering Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing Chart.js charts...');
+    
+    // Chart.js default configuration
+    Chart.defaults.color = '#e5e7eb';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+    Chart.defaults.responsive = true;
+    Chart.defaults.maintainAspectRatio = false;
+    
+    // Get chart data from server
+    const historicalData = {{ historical_chart_data|tojson }};
+    const predictionData = {{ prediction_chart_data|tojson }};
+    
+    console.log('Historical data points:', historicalData.prices ? historicalData.prices.length : 0);
+    console.log('Prediction data points:', predictionData.prices ? predictionData.prices.length : 0);
+    
+    // Common chart options
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#e5e7eb',
+                    font: { size: 14 }
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#ffffff',
+                bodyColor: '#e5e7eb',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1,
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: '#9ca3af',
+                    maxTicksLimit: 8
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            y: {
+                ticks: {
+                    color: '#9ca3af',
+                    callback: function(value) {
+                        return '$' + value.toFixed(2);
+                    }
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        }
+    };
+    
+    // Helper function to show chart errors
+    function showChartError(canvasId, message) {
+        const canvas = document.getElementById(canvasId);
+        if (canvas) {
+            const container = canvas.parentElement;
+            container.innerHTML = `
+                <div class="flex items-center justify-center h-96 text-center">
+                    <div>
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-3xl mb-3"></i>
+                        <p class="text-white mb-2">${message}</p>
+                        <p class="text-gray-400 text-sm">Please refresh the page to retry</p>
+                        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-redo mr-2"></i>Reload
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Validate data before creating charts
+    function validateChartData(data, dataName) {
+        if (!data || !data.labels || !data.prices) {
+            console.error(`${dataName} data is missing required fields`);
+            return false;
+        }
+        
+        if (!Array.isArray(data.labels) || !Array.isArray(data.prices)) {
+            console.error(`${dataName} data fields are not arrays`);
+            return false;
+        }
+        
+        if (data.labels.length === 0 || data.prices.length === 0) {
+            console.error(`${dataName} data arrays are empty`);
+            return false;
+        }
+        
+        if (data.labels.length !== data.prices.length) {
+            console.error(`${dataName} data length mismatch: ${data.labels.length} labels vs ${data.prices.length} prices`);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Initialize Historical Chart
+    try {
+        const historicalCtx = document.getElementById('historicalChart');
+        if (!historicalCtx) {
+            throw new Error('Historical chart canvas not found');
+        }
+        
+        if (!validateChartData(historicalData, 'Historical')) {
+            throw new Error('Historical data validation failed');
+        }
+        
+        new Chart(historicalCtx, {
+            type: 'line',
+            data: {
+                labels: historicalData.labels,
+                datasets: [{
+                    label: 'Historical Prices',
+                    data: historicalData.prices,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.1,
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1,
+                    pointRadius: 1,
+                    pointHoverRadius: 4
+                }]
+            },
+            options: {
+                ...chartOptions,
+                plugins: {
+                    ...chartOptions.plugins,
+                    title: {
+                        display: true,
+                        text: `Historical Prices - {{ symbol }}`,
+                        color: '#ffffff',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                }
+            }
+        });
+        
+        console.log('✅ Historical chart created successfully');
+    } catch (error) {
+        console.error('❌ Error creating historical chart:', error);
+        showChartError('historicalChart', 'Error loading historical chart');
+    }
+    
+    // Initialize Prediction Chart
+    try {
+        const predictionCtx = document.getElementById('predictionChart');
+        if (!predictionCtx) {
+            throw new Error('Prediction chart canvas not found');
+        }
+        
+        if (!validateChartData(predictionData, 'Prediction')) {
+            throw new Error('Prediction data validation failed');
+        }
+        
+        new Chart(predictionCtx, {
+            type: 'line',
+            data: {
+                labels: predictionData.labels,
+                datasets: [{
+                    label: 'AI Predictions',
+                    data: predictionData.prices,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: true,
+                    tension: 0.1,
+                    pointBackgroundColor: '#8b5cf6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1,
+                    pointRadius: 2,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                ...chartOptions,
+                plugins: {
+                    ...chartOptions.plugins,
+                    title: {
+                        display: true,
+                        text: `AI Predictions - {{ symbol }}`,
+                        color: '#ffffff',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                }
+            }
+        });
+        
+        console.log('✅ Prediction chart created successfully');
+    } catch (error) {
+        console.error('❌ Error creating prediction chart:', error);
+        showChartError('predictionChart', 'Error loading prediction chart');
+    }
+    
+    // Initialize Combined Chart
+    try {
+        const combinedCtx = document.getElementById('combinedChart');
+        if (!combinedCtx) {
+            throw new Error('Combined chart canvas not found');
+        }
+        
+        if (!validateChartData(historicalData, 'Historical') || !validateChartData(predictionData, 'Prediction')) {
+            throw new Error('Combined chart data validation failed');
+        }
+        
+        // Get last few historical points for transition
+        const lastHistoricalPoints = historicalData.labels.slice(-10);
+        const lastHistoricalPrices = historicalData.prices.slice(-10);
+        
+        new Chart(combinedCtx, {
+            type: 'line',
+            data: {
+                labels: [...lastHistoricalPoints, ...predictionData.labels],
+                datasets: [
+                    {
+                        label: 'Recent Historical',
+                        data: [...lastHistoricalPrices, ...Array(predictionData.labels.length).fill(null)],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1,
+                        pointRadius: 2
+                    },
+                    {
+                        label: 'AI Predictions',
+                        data: [...Array(lastHistoricalPoints.length).fill(null), ...predictionData.prices],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.1,
+                        pointBackgroundColor: '#8b5cf6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1,
+                        pointRadius: 2
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                plugins: {
+                    ...chartOptions.plugins,
+                    title: {
+                        display: true,
+                        text: `Complete Analysis - {{ symbol }}`,
+                        color: '#ffffff',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                }
+            }
+        });
+        
+        console.log('✅ Combined chart created successfully');
+    } catch (error) {
+        console.error('❌ Error creating combined chart:', error);
+        showChartError('combinedChart', 'Error loading combined chart');
+    }
+    
+    // Add smooth animations
+    const animateElements = document.querySelectorAll('.animate-fade-in, .animate-slide-up');
+    animateElements.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'all 0.8s ease';
+        
+        setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+    
+    console.log('🎯 All charts initialized successfully');
+});
+
+// Error handling for Chart.js
+window.addEventListener('error', function(e) {
+    if (e.message && e.message.includes('Chart')) {
+        console.error('Chart.js Error:', e);
+    }
+});
+
+// Performance monitoring
+if ('performance' in window) {
+    window.addEventListener('load', () => {
+        const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+        console.log(`📊 Page loaded in ${loadTime}ms`);
+    });
+}
+</script>
+
+<!-- Enhanced CSS for better chart display -->
+<style>
+/* Chart container styling */
+.chart-container {
+    min-height: 400px;
+    height: 400px;
+    position: relative;
+}
+
+.chart-container canvas {
+    max-height: 400px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chart-container {
+        min-height: 300px;
+        height: 300px;
+    }
+    
+    .chart-container canvas {
+        max-height: 300px !important;
+    }
+    
+    .grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    .text-4xl {
+        font-size: 2rem;
+    }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+/* Loading states */
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .chart-container {
+        background: white !important;
+        border: 1px solid #ddd !important;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus styles for accessibility */
+button:focus,
+a:focus,
+canvas:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .bg-white\/10 {
+        background: rgba(255, 255, 255, 0.3) !important;
+        border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    .text-gray-400 {
+        color: #ffffff !important;
+    }
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Chart tooltip enhancements */
+.chartjs-tooltip {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    color: white !important;
+    font-family: inherit !important;
+}
+
+/* Button enhancements */
+.btn-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,60 @@
+/* Add this CSS to your templates/prediction.html file in the <style> section */
+
+/* Fixed chart container heights */
+#historicalChart, #predictionChart, #combinedChart {
+    height: 400px !important;
+    max-height: 400px !important;
+    width: 100% !important;
+}
+
+.chart-container-wrapper {
+    height: 400px;
+    max-height: 400px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Prevent chart expansion */
+canvas {
+    max-height: 400px !important;
+    height: 400px !important;
+}
+
+/* Chart.js responsive override */
+.chartjs-render-monitor {
+    height: 400px !important;
+    max-height: 400px !important;
+}
+
+/* Loading state height */
+.chart-loading-state {
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile responsive chart heights */
+@media (max-width: 768px) {
+    #historicalChart, #predictionChart, #combinedChart {
+        height: 300px !important;
+        max-height: 300px !important;
+    }
+    
+    .chart-container-wrapper {
+        height: 300px;
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    #historicalChart, #predictionChart, #combinedChart {
+        height: 250px !important;
+        max-height: 250px !important;
+    }
+    
+    .chart-container-wrapper {
+        height: 250px;
+        max-height: 250px;
+    }
+}
