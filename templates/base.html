@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AI Stock Predictor - Professional Trading Analytics{% endblock %}</title>
     
+    <!-- Meta Tags for SEO -->
+    <meta name="description" content="AI-powered stock market predictions using advanced LSTM neural networks. Get professional trading analytics with real-time data and interactive charts.">
+    <meta name="keywords" content="AI, stock prediction, machine learning, LSTM, trading, analytics, financial forecasting">
+    <meta name="author" content="AI Stock Predictor">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="AI Stock Predictor - Professional Trading Analytics">
+    <meta property="og:description" content="Advanced AI-powered stock market predictions with LSTM neural networks">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -14,33 +28,75 @@
                     colors: {
                         primary: {
                             50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
                             500: '#3b82f6',
                             600: '#2563eb',
                             700: '#1d4ed8',
+                            800: '#1e40af',
                             900: '#1e3a8a'
                         },
                         success: {
                             50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
                             500: '#22c55e',
                             600: '#16a34a',
-                            700: '#15803d'
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d'
                         },
                         danger: {
                             50: '#fef2f2',
+                            100: '#fee2e2',
+                            200: '#fecaca',
+                            300: '#fca5a5',
+                            400: '#f87171',
                             500: '#ef4444',
                             600: '#dc2626',
-                            700: '#b91c1c'
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d'
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f'
                         },
                         gray: {
-                            850: '#1f2937',
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            200: '#e5e7eb',
+                            300: '#d1d5db',
+                            400: '#9ca3af',
+                            500: '#6b7280',
+                            600: '#4b5563',
+                            700: '#374151',
+                            800: '#1f2937',
+                            850: '#1a202c',
+                            900: '#111827',
                             950: '#030712'
                         }
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-in-out',
                         'slide-up': 'slideUp 0.3s ease-out',
+                        'slide-down': 'slideDown 0.3s ease-out',
                         'pulse-slow': 'pulse 3s infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate'
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'spin-slow': 'spin 3s linear infinite'
                     },
                     keyframes: {
                         fadeIn: {
@@ -51,142 +107,961 @@
                             '0%': { transform: 'translateY(20px)', opacity: '0' },
                             '100%': { transform: 'translateY(0)', opacity: '1' }
                         },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
                         glow: {
                             '0%': { boxShadow: '0 0 5px #3b82f6' },
                             '100%': { boxShadow: '0 0 20px #3b82f6, 0 0 30px #3b82f6' }
                         }
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    },
+                    fontFamily: {
+                        'display': ['Inter', 'system-ui', 'sans-serif'],
+                        'body': ['Inter', 'system-ui', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    
     <!-- Chart.js for reliable charting -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom styles -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Alpine.js for interactive components -->
+    <script defer src="https://unpkg.com/alpinejs@3.13.2/dist/cdn.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS Styles -->
     <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Custom CSS Variables */
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            --gradient-danger: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            --gradient-warning: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
         }
-        .card-hover {
-            transition: all 0.3s ease;
+
+        /* Base Styles */
+        * {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+
+        body {
+            font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            background-attachment: fixed;
         }
+
+        /* Glass Effect Components */
         .glass-effect {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
+
+        .glass-effect-dark {
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Enhanced Card Hover Effects */
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px) rotateX(2deg);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.25),
+                0 0 40px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Button Enhancement */
+        .btn-enhanced {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn-enhanced:hover::before {
+            left: 100%;
+        }
+
+        .btn-enhanced:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Chart Container Styling */
         .chart-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Navigation Enhancements */
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.6);
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.8);
+        }
+
+        /* Focus Styles for Accessibility */
+        button:focus,
+        a:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Mobile Menu Animation */
+        #mobile-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #mobile-menu.show {
+            max-height: 500px;
+        }
+
+        /* Notification Styles */
+        .notification {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Status Indicators */
+        .status-online {
+            position: relative;
+        }
+
+        .status-online::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        /* Loading Animations */
+        .loading-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Screen Reader Only */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Print Styles */
+        @media print {
+            nav, footer, .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .text-white {
+                color: black !important;
+            }
+        }
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* High Contrast Mode Support */
+        @media (prefers-contrast: high) {
+            .glass-effect,
+            .glass-effect-dark {
+                background: rgba(255, 255, 255, 0.3) !important;
+                border: 2px solid rgba(255, 255, 255, 0.7) !important;
+            }
+            .text-gray-400,
+            .text-gray-300 {
+                color: #ffffff !important;
+            }
+        }
+
+        /* Mobile Responsive Enhancements */
+        @media (max-width: 768px) {
+            .card-hover:hover {
+                transform: translateY(-4px);
+            }
+            .btn-enhanced:hover {
+                transform: translateY(-1px);
+            }
         }
     </style>
 </head>
-<body class="h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+
+<body class="h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white font-body">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-lg z-50">
+        Skip to main content
+    </a>
+
     <!-- Navigation -->
-    <nav class="bg-gray-900/80 backdrop-blur-md border-b border-gray-700/50 sticky top-0 z-50">
+    <nav class="glass-effect-dark sticky top-0 z-40 border-b border-white/10" role="navigation" aria-label="Main navigation">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <!-- Logo and Brand -->
                 <div class="flex items-center">
-                    <a href="{{ url_for('index') }}" class="flex items-center space-x-3 group">
-                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                            <i class="fas fa-chart-line text-white text-lg"></i>
+                    <a href="{% if current_user.is_authenticated %}{{ url_for('dashboard') }}{% else %}{{ url_for('index') }}{% endif %}" 
+                       class="flex items-center space-x-3 group" 
+                       aria-label="AI Stock Predictor Home">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <i class="fas fa-chart-line text-white text-lg" aria-hidden="true"></i>
                         </div>
                         <div>
-                            <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                            <h1 class="text-xl font-bold gradient-text">
                                 AI Stock Predictor
                             </h1>
-                            <p class="text-xs text-gray-400">Professional Trading Analytics</p>
+                            <p class="text-xs text-gray-400 hidden sm:block">Professional Trading Analytics</p>
                         </div>
                     </a>
                 </div>
+                
+                <!-- Desktop Navigation -->
                 <div class="flex items-center space-x-4">
-                    <div class="hidden md:flex items-center space-x-6">
-                        <a href="{{ url_for('index') }}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                            <i class="fas fa-home mr-2"></i>Dashboard
-                        </a>
-                        <div class="text-gray-400 text-sm">
-                            <i class="fas fa-clock mr-1"></i>
-                            <span id="current-time"></span>
+                    {% if current_user.is_authenticated %}
+                        <!-- Authenticated User Menu -->
+                        <div class="hidden md:flex items-center space-x-6">
+                            <a href="{{ url_for('dashboard') }}" 
+                               class="nav-link text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 {% if request.endpoint == 'dashboard' %}text-blue-400 active{% endif %}"
+                               aria-label="Dashboard">
+                                <i class="fas fa-home mr-2" aria-hidden="true"></i>Dashboard
+                            </a>
+                            <a href="{{ url_for('prediction_history') }}" 
+                               class="nav-link text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 {% if request.endpoint == 'prediction_history' %}text-blue-400 active{% endif %}"
+                               aria-label="Prediction History">
+                                <i class="fas fa-history mr-2" aria-hidden="true"></i>History
+                            </a>
                         </div>
+                        
+                        <!-- User Dropdown -->
+                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                            <button @click="open = !open" 
+                                    class="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded-lg px-2 py-1"
+                                    aria-expanded="false"
+                                    aria-haspopup="true"
+                                    :aria-expanded="open"
+                                    aria-label="User menu">
+                                <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg status-online">
+                                    <span class="text-white font-semibold text-sm">{{ current_user.first_name[0].upper() }}{{ current_user.last_name[0].upper() }}</span>
+                                </div>
+                                <span class="hidden md:block font-medium">{{ current_user.first_name }}</span>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{'rotate-180': open}" aria-hidden="true"></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div x-show="open" 
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-64 glass-effect rounded-xl shadow-xl border border-white/20 py-2 z-50"
+                                 role="menu"
+                                 aria-orientation="vertical"
+                                 aria-labelledby="user-menu">
+                                
+                                <!-- User Info Header -->
+                                <div class="px-4 py-3 border-b border-white/10">
+                                    <p class="text-white font-semibold">{{ current_user.get_full_name() }}</p>
+                                    <p class="text-gray-400 text-sm">{{ current_user.email }}</p>
+                                    <div class="flex items-center mt-2 text-xs text-gray-400">
+                                        <i class="fas fa-calendar mr-1" aria-hidden="true"></i>
+                                        <span>Member since {{ current_user.created_at.strftime('%B %Y') }}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Navigation Menu Items -->
+                                <div class="py-2" role="none">
+                                    <a href="{{ url_for('dashboard') }}" 
+                                       class="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors duration-200"
+                                       role="menuitem">
+                                        <i class="fas fa-home mr-3 text-blue-400" aria-hidden="true"></i>Dashboard
+                                    </a>
+                                    <a href="{{ url_for('prediction_history') }}" 
+                                       class="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors duration-200"
+                                       role="menuitem">
+                                        <i class="fas fa-history mr-3 text-green-400" aria-hidden="true"></i>Prediction History
+                                        <span class="ml-auto bg-blue-600/20 text-blue-400 text-xs px-2 py-1 rounded-full">{{ current_user.get_prediction_count() }}</span>
+                                    </a>
+                                    <a href="{{ url_for('profile') }}" 
+                                       class="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-colors duration-200"
+                                       role="menuitem">
+                                        <i class="fas fa-user mr-3 text-purple-400" aria-hidden="true"></i>Profile Settings
+                                    </a>
+                                </div>
+                                
+                                <!-- Logout Section -->
+                                <div class="border-t border-white/10 py-2" role="none">
+                                    <a href="{{ url_for('logout') }}" 
+                                       class="flex items-center px-4 py-2 text-gray-300 hover:text-red-400 hover:bg-red-600/10 transition-colors duration-200"
+                                       role="menuitem">
+                                        <i class="fas fa-sign-out-alt mr-3 text-red-400" aria-hidden="true"></i>Sign Out
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Guest User Menu -->
+                        <div class="hidden md:flex items-center space-x-4">
+                            <a href="{{ url_for('login') }}" 
+                               class="text-gray-300 hover:text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                                Sign In
+                            </a>
+                            <a href="{{ url_for('register') }}" 
+                               class="btn-enhanced bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-lg">
+                                Get Started
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Status Indicators -->
+                    <div class="hidden lg:flex items-center space-x-4 text-sm text-gray-400">
+                        <div class="flex items-center">
+                            <i class="fas fa-clock mr-1" aria-hidden="true"></i>
+                            <span id="current-time" aria-live="polite">--:--</span>
+                        </div>
+                        {% if current_user.is_authenticated %}
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-line mr-1 text-green-400" aria-hidden="true"></i>
+                                <span>{{ current_user.get_prediction_count() }} predictions</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Mobile Menu Button -->
+                    <div class="md:hidden">
+                        <button id="mobile-menu-button" 
+                                class="text-gray-300 hover:text-white transition-colors p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                aria-label="Open mobile menu"
+                                aria-expanded="false">
+                            <i class="fas fa-bars text-xl" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden glass-effect-dark border-t border-white/10" role="menu">
+            <div class="px-4 py-3 space-y-3">
+                {% if current_user.is_authenticated %}
+                    <!-- Mobile User Info -->
+                    <div class="flex items-center space-x-3 pb-3 border-b border-white/10">
+                        <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center status-online">
+                            <span class="text-white font-semibold">{{ current_user.first_name[0].upper() }}{{ current_user.last_name[0].upper() }}</span>
+                        </div>
+                        <div>
+                            <p class="text-white font-semibold">{{ current_user.get_full_name() }}</p>
+                            <p class="text-gray-400 text-sm">{{ current_user.email }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Navigation Links -->
+                    <a href="{{ url_for('dashboard') }}" 
+                       class="flex items-center text-gray-300 hover:text-white py-2 transition-colors rounded-lg px-2"
+                       role="menuitem">
+                        <i class="fas fa-home mr-3 text-blue-400" aria-hidden="true"></i>Dashboard
+                    </a>
+                    <a href="{{ url_for('prediction_history') }}" 
+                       class="flex items-center text-gray-300 hover:text-white py-2 transition-colors rounded-lg px-2"
+                       role="menuitem">
+                        <i class="fas fa-history mr-3 text-green-400" aria-hidden="true"></i>History
+                        <span class="ml-auto bg-blue-600/20 text-blue-400 text-xs px-2 py-1 rounded-full">{{ current_user.get_prediction_count() }}</span>
+                    </a>
+                    <a href="{{ url_for('profile') }}" 
+                       class="flex items-center text-gray-300 hover:text-white py-2 transition-colors rounded-lg px-2"
+                       role="menuitem">
+                        <i class="fas fa-user mr-3 text-purple-400" aria-hidden="true"></i>Profile
+                    </a>
+                    <a href="{{ url_for('logout') }}" 
+                       class="flex items-center text-red-400 hover:text-red-300 py-2 transition-colors rounded-lg px-2"
+                       role="menuitem">
+                        <i class="fas fa-sign-out-alt mr-3" aria-hidden="true"></i>Sign Out
+                    </a>
+                {% else %}
+                    <!-- Guest Mobile Menu -->
+                    <a href="{{ url_for('login') }}" 
+                       class="block text-gray-300 hover:text-white py-2 transition-colors rounded-lg px-2"
+                       role="menuitem">
+                        <i class="fas fa-sign-in-alt mr-3" aria-hidden="true"></i>Sign In
+                    </a>
+                    <a href="{{ url_for('register') }}" 
+                       class="block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors mt-2"
+                       role="menuitem">
+                        <i class="fas fa-user-plus mr-3" aria-hidden="true"></i>Get Started
+                    </a>
+                {% endif %}
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="min-h-screen">
+    <main class="min-h-screen" id="main-content" role="main">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900/80 backdrop-blur-md border-t border-gray-700/50 py-8 mt-12">
+<!-- Footer -->
+<!-- Footer -->
+    <footer class="glass-effect-dark border-t border-white/10 py-8 mt-12" role="contentinfo">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Brand Section -->
                 <div>
-                    <h3 class="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    <h3 class="text-lg font-semibold mb-4 gradient-text">
                         AI Stock Predictor
                     </h3>
-                    <p class="text-gray-400 text-sm">
-                        Professional-grade stock market prediction using advanced LSTM neural networks and real-time market data analysis.
+                    <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                        Advanced AI-powered stock market prediction platform designed for professional traders and investors.
                     </p>
+                    {% if current_user.is_authenticated %}
+                        <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+                            <p class="text-sm text-gray-300">
+                                <i class="fas fa-user text-green-400 mr-2" aria-hidden="true"></i>
+                                Welcome back, {{ current_user.first_name }}!
+                            </p>
+                            <p class="text-xs text-gray-400 mt-1">
+                                <i class="fas fa-chart-line text-blue-400 mr-1" aria-hidden="true"></i>
+                                {{ current_user.get_prediction_count() }} prediction{{ 's' if current_user.get_prediction_count() != 1 else '' }} made
+                            </p>
+                            <p class="text-xs text-gray-400">
+                                <i class="fas fa-calendar text-purple-400 mr-1" aria-hidden="true"></i>
+                                Member since {{ current_user.created_at.strftime('%B %Y') }}
+                            </p>
+                        </div>
+                    {% endif %}
                 </div>
+                
+                <!-- Features Section -->
                 <div>
-                    <h3 class="text-lg font-semibold mb-4 text-white">Features</h3>
-                    <ul class="space-y-2 text-gray-400 text-sm">
-                        <li><i class="fas fa-check text-green-500 mr-2"></i>Real-time Data Analysis</li>
-                        <li><i class="fas fa-check text-green-500 mr-2"></i>LSTM Neural Networks</li>
-                        <li><i class="fas fa-check text-green-500 mr-2"></i>Technical Indicators</li>
-                        <li><i class="fas fa-check text-green-500 mr-2"></i>Interactive Charts</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-4 text-white">Technology</h3>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs">Python</span>
-                        <span class="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-xs">Flask</span>
-                        <span class="px-3 py-1 bg-purple-600/20 text-purple-400 rounded-full text-xs">TensorFlow</span>
-                        <span class="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full text-xs">LSTM</span>
+                    <h3 class="text-lg font-semibold mb-4 text-white">Key Features</h3>
+                    <div class="space-y-2 text-gray-400 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-brain text-blue-400 mr-2" aria-hidden="true"></i>
+                            AI-Powered Predictions
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-chart-area text-green-400 mr-2" aria-hidden="true"></i>
+                            Real-time Market Data
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-history text-purple-400 mr-2" aria-hidden="true"></i>
+                            Prediction History Tracking
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-mobile-alt text-yellow-400 mr-2" aria-hidden="true"></i>
+                            Mobile-Responsive Design
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt text-red-400 mr-2" aria-hidden="true"></i>
+                            Secure User Accounts
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-chart-bar text-cyan-400 mr-2" aria-hidden="true"></i>
+                            Interactive Analytics
+                        </div>
                     </div>
                 </div>
+                
+                <!-- App Information -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-white">About Platform</h3>
+                    <div class="space-y-3 text-gray-400 text-sm">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-400 mr-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
+                            <span>Professional-grade stock market analysis using machine learning algorithms</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-users text-green-400 mr-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
+                            <span>Trusted by traders and investors for accurate market predictions</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-globe text-purple-400 mr-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
+                            <span>Comprehensive market coverage with real-time data integration</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-clock text-yellow-400 mr-2 mt-1 flex-shrink-0" aria-hidden="true"></i>
+                            <span>Available 24/7 for continuous market monitoring and analysis</span>
+                        </div>
+                    </div>
+                    
+                    {% if not current_user.is_authenticated %}
+                        <div class="bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-lg p-4 border border-blue-600/20 mt-4">
+                            <p class="text-sm text-gray-300 mb-2">
+                                <i class="fas fa-rocket text-blue-400 mr-2" aria-hidden="true"></i>
+                                Start your trading journey today
+                            </p>
+                            <p class="text-xs text-gray-400">
+                                Join thousands of successful traders using AI predictions
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-            <div class="border-t border-gray-700/50 mt-8 pt-8 text-center">
-                <p class="text-gray-400 text-sm">
-                    © 2025 AI Stock Predictor. Built with <span class="text-red-500">♥</span> using Python, Flask & TensorFlow.
-                </p>
+            
+            <!-- Footer Bottom -->
+            <div class="border-t border-white/10 mt-8 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                    <p class="text-gray-400 text-sm text-center md:text-left">
+                        © 2025 AI Stock Predictor. Professional Trading Analytics Platform.
+                        {% if current_user.is_authenticated %}
+                        <br class="md:hidden">
+                        <span class="hidden md:inline"> | </span>Welcome back, {{ current_user.first_name }}!
+                        {% endif %}
+                    </p>
+                    
+                    <!-- Footer Info -->
+                    <div class="flex items-center space-x-6 text-sm">
+                        <div class="text-gray-400">
+                            <i class="fas fa-shield-alt mr-1" aria-hidden="true"></i>
+                            Secure & Reliable
+                        </div>
+                        <div class="text-gray-400">
+                            <i class="fas fa-check-circle mr-1" aria-hidden="true"></i>
+                            AI-Powered
+                        </div>
+                        {% if current_user.is_authenticated %}
+                            <div class="text-gray-400 border-l border-gray-600 pl-4">
+                                <i class="fas fa-clock mr-1" aria-hidden="true"></i>
+                                <span id="footer-time" class="font-mono">--:--</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </footer>
 
+    <!-- Notification Container -->
+    <div id="notification-container" class="fixed top-20 right-4 z-50 space-y-2" aria-live="polite"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-white/10 rounded-2xl p-8 max-w-sm mx-4 text-center glass-effect">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+            <h3 class="text-white font-semibold text-lg mb-2">Processing Request</h3>
+            <p class="text-gray-300 text-sm">Please wait while we process your request...</p>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script>
-        // Update current time
-        function updateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            const timeElement = document.getElementById('current-time');
-            if (timeElement) {
-                timeElement.textContent = timeString;
+        // Global JavaScript functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 AI Stock Predictor initialized');
+            
+            // Initialize all components
+            initializeTimeUpdates();
+            initializeMobileMenu();
+            initializeNotifications();
+            initializeFormEnhancements();
+            initializeAccessibility();
+            
+            // Add welcome message for new users
+            {% if current_user.is_authenticated %}
+                const memberSince = new Date('{{ current_user.created_at.isoformat() }}');
+                const now = new Date();
+                const daysSinceMember = Math.floor((now - memberSince) / (1000 * 60 * 60 * 24));
+                
+                if (daysSinceMember === 0) {
+                    setTimeout(() => {
+                        showNotification('Welcome to AI Stock Predictor! 🎉', 'success');
+                    }, 2000);
+                }
+            {% endif %}
+        });
+
+        // Time update functionality
+        function initializeTimeUpdates() {
+            function updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const timeElements = document.querySelectorAll('#current-time, #footer-time');
+                timeElements.forEach(element => {
+                    if (element) element.textContent = timeString;
+                });
+            }
+            
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+
+        // Mobile menu functionality
+        function initializeMobileMenu() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIcon = mobileMenuButton?.querySelector('i');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    const isOpen = mobileMenu.classList.contains('show');
+                    
+                    if (isOpen) {
+                        mobileMenu.classList.remove('show');
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                        if (menuIcon) {
+                            menuIcon.classList.remove('fa-times');
+                            menuIcon.classList.add('fa-bars');
+                        }
+                    } else {
+                        mobileMenu.classList.add('show');
+                        mobileMenuButton.setAttribute('aria-expanded', 'true');
+                        if (menuIcon) {
+                            menuIcon.classList.remove('fa-bars');
+                            menuIcon.classList.add('fa-times');
+                        }
+                    }
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+                        mobileMenu.classList.remove('show');
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                        if (menuIcon) {
+                            menuIcon.classList.remove('fa-times');
+                            menuIcon.classList.add('fa-bars');
+                        }
+                    }
+                });
             }
         }
-        
-        updateTime();
-        setInterval(updateTime, 1000);
 
-        // Add smooth scrolling
+        // Notification system
+        function initializeNotifications() {
+            // Auto-dismiss flash messages
+            const flashMessages = document.querySelectorAll('[data-flash-message]');
+            flashMessages.forEach(message => {
+                const dismissButton = message.querySelector('[data-dismiss]');
+                if (dismissButton) {
+                    dismissButton.addEventListener('click', () => {
+                        message.style.transform = 'translateX(100%)';
+                        message.style.opacity = '0';
+                        setTimeout(() => message.remove(), 300);
+                    });
+                }
+                
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => {
+                    if (message.parentElement) {
+                        message.style.transform = 'translateX(100%)';
+                        message.style.opacity = '0';
+                        setTimeout(() => message.remove(), 300);
+                    }
+                }, 5000);
+            });
+        }
+
+        // Enhanced notification function
+        function showNotification(message, type = 'info', duration = 5000) {
+            const container = document.getElementById('notification-container');
+            if (!container) return;
+
+            const notification = document.createElement('div');
+            notification.className = `notification max-w-sm bg-white/10 backdrop-blur-lg rounded-lg shadow-lg border border-white/20 p-4 transform transition-all duration-300 ${
+                type === 'success' ? 'border-green-500/50' :
+                type === 'error' ? 'border-red-500/50' :
+                type === 'warning' ? 'border-yellow-500/50' :
+                'border-blue-500/50'
+            }`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas ${
+                            type === 'success' ? 'fa-check-circle text-green-400' :
+                            type === 'error' ? 'fa-exclamation-triangle text-red-400' :
+                            type === 'warning' ? 'fa-exclamation-circle text-yellow-400' :
+                            'fa-info-circle text-blue-400'
+                        } mr-3"></i>
+                        <span class="text-white font-medium">${message}</span>
+                    </div>
+                    <button class="ml-4 text-gray-300 hover:text-white transition-colors" onclick="dismissNotification(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Animate in
+            requestAnimationFrame(() => {
+                notification.classList.add('show');
+            });
+            
+            // Auto-dismiss
+            setTimeout(() => {
+                dismissNotification(notification.querySelector('button'));
+            }, duration);
+        }
+
+        function dismissNotification(button) {
+            const notification = button.closest('.notification');
+            notification.style.transform = 'translateX(100%)';
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }
+
+        // Form enhancements
+        function initializeFormEnhancements() {
+            // Enhanced form handling
+            const forms = document.querySelectorAll('form[data-enhanced]');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+                    if (submitBtn && !submitBtn.disabled) {
+                        const originalText = submitBtn.textContent || submitBtn.value;
+                        submitBtn.disabled = true;
+                        
+                        if (submitBtn.tagName === 'BUTTON') {
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+                        }
+                        
+                        // Show loading overlay for prediction forms
+                        if (form.id === 'predictionForm') {
+                            showLoadingOverlay();
+                        }
+                        
+                        // Re-enable after timeout as fallback
+                        setTimeout(() => {
+                            submitBtn.disabled = false;
+                            if (submitBtn.tagName === 'BUTTON') {
+                                submitBtn.innerHTML = originalText;
+                            }
+                            hideLoadingOverlay();
+                        }, 30000); // 30 second timeout
+                    }
+                });
+            });
+
+            // Auto-save form data to localStorage for non-sensitive forms
+            {% if current_user.is_authenticated %}
+                enableFormAutoSave('predictionForm', ['csrf_token']);
+            {% endif %}
+        }
+
+        // Loading overlay functions
+        function showLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+        }
+
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        }
+
+        // Auto-save functionality
+        function enableFormAutoSave(formId, excludeFields = []) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+
+            const saveKey = `form_${formId}_data`;
+            
+            // Load saved data
+            try {
+                const savedData = localStorage.getItem(saveKey);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    Object.keys(data).forEach(name => {
+                        if (!excludeFields.includes(name)) {
+                            const field = form.querySelector(`[name="${name}"]`);
+                            if (field && field.type !== 'password') {
+                                field.value = data[name];
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('Could not load saved form data:', e);
+            }
+
+            // Save data on input
+            form.addEventListener('input', function(e) {
+                if (e.target.type === 'password' || excludeFields.includes(e.target.name)) {
+                    return;
+                }
+                
+                try {
+                    const formData = new FormData(form);
+                    const data = {};
+                    for (let [key, value] of formData.entries()) {
+                        if (!excludeFields.includes(key)) {
+                            data[key] = value;
+                        }
+                    }
+                    localStorage.setItem(saveKey, JSON.stringify(data));
+                } catch (e) {
+                    console.warn('Could not save form data:', e);
+                }
+            });
+
+            // Clear saved data on successful submit
+            form.addEventListener('submit', function() {
+                setTimeout(() => {
+                    localStorage.removeItem(saveKey);
+                }, 1000);
+            });
+        }
+
+        // Accessibility enhancements
+        function initializeAccessibility() {
+            // Add keyboard navigation for dropdown menus
+            const dropdownButtons = document.querySelectorAll('[aria-haspopup="true"]');
+            dropdownButtons.forEach(button => {
+                button.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        button.click();
+                    }
+                });
+            });
+
+            // Announce page changes to screen readers
+            const pageTitle = document.title;
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = `Page loaded: ${pageTitle}`;
+            document.body.appendChild(announcement);
+        }
+
+        // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -200,15 +1075,58 @@
             });
         });
 
-        // Add loading states and animations
-        document.addEventListener('DOMContentLoaded', function() {
-            // Animate elements on page load
-            const elements = document.querySelectorAll('.animate-on-load');
-            elements.forEach((el, index) => {
-                setTimeout(() => {
-                    el.classList.add('animate-fade-in');
-                }, index * 100);
+        // Performance monitoring
+        if ('performance' in window) {
+            window.addEventListener('load', () => {
+                const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+                console.log(`📊 Page loaded in ${loadTime}ms`);
+                
+                if (loadTime > 5000) {
+                    setTimeout(() => {
+                        showNotification('Page loaded slower than expected. Please check your connection.', 'warning');
+                    }, 1000);
+                }
             });
+        }
+
+        // Error boundary for JavaScript errors
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript error:', e);
+            if (e.message && e.message.includes('Chart')) {
+                showNotification('Chart rendering error. Please refresh the page.', 'error');
+            }
+        });
+
+        // Online/offline status
+        window.addEventListener('online', function() {
+            showNotification('Connection restored', 'success');
+        });
+
+        window.addEventListener('offline', function() {
+            showNotification('You are now offline', 'warning');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Alt + H: Go to home/dashboard
+            if (e.altKey && e.key === 'h') {
+                e.preventDefault();
+                {% if current_user.is_authenticated %}
+                    window.location.href = '{{ url_for("dashboard") }}';
+                {% else %}
+                    window.location.href = '{{ url_for("index") }}';
+                {% endif %}
+            }
+            
+            // Alt + L: Logout (if authenticated)
+            {% if current_user.is_authenticated %}
+            if (e.altKey && e.key === 'l') {
+                e.preventDefault();
+                if (confirm('Are you sure you want to log out?')) {
+                    window.location.href = '{{ url_for("logout") }}';
+                }
+            }
+            {% endif %}
         });
     </script>
 </body>

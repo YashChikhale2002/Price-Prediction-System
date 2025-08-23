@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History - AI Stock Predictor{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    <i class="fas fa-history text-blue-400 mr-3"></i>Prediction History
+                </h1>
+                <p class="text-gray-300 text-lg">Track your AI-powered stock market predictions</p>
+            </div>
+            <div class="text-right">
+                <a href="{{ url_for('dashboard') }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-plus mr-2"></i>New Prediction
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 animate-slide-up">
+        <!-- Total Predictions -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 text-center card-hover">
+            <div class="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-chart-line text-blue-400 text-xl"></i>
+            </div>
+            <h3 class="text-gray-300 text-sm font-semibold mb-2 uppercase tracking-wide">Total Predictions</h3>
+            <p class="text-3xl font-bold text-white">{{ stats.total_predictions }}</p>
+        </div>
+
+        <!-- Average Change -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 text-center card-hover">
+            <div class="w-12 h-12 {% if stats.avg_change_percent > 0 %}bg-green-600/20{% else %}bg-red-600/20{% endif %} rounded-xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas {% if stats.avg_change_percent > 0 %}fa-arrow-up text-green-400{% else %}fa-arrow-down text-red-400{% endif %} text-xl"></i>
+            </div>
+            <h3 class="text-gray-300 text-sm font-semibold mb-2 uppercase tracking-wide">Avg. Change</h3>
+            <p class="text-3xl font-bold {% if stats.avg_change_percent > 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                {% if stats.avg_change_percent > 0 %}+{% endif %}{{ "%.1f"|format(stats.avg_change_percent) }}%
+            </p>
+        </div>
+
+        <!-- Bullish Predictions -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 text-center card-hover">
+            <div class="w-12 h-12 bg-green-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-thumbs-up text-green-400 text-xl"></i>
+            </div>
+            <h3 class="text-gray-300 text-sm font-semibold mb-2 uppercase tracking-wide">Bullish</h3>
+            <p class="text-3xl font-bold text-green-400">{{ stats.bullish_predictions }}</p>
+        </div>
+
+        <!-- Bearish Predictions -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 text-center card-hover">
+            <div class="w-12 h-12 bg-red-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-thumbs-down text-red-400 text-xl"></i>
+            </div>
+            <h3 class="text-gray-300 text-sm font-semibold mb-2 uppercase tracking-wide">Bearish</h3>
+            <p class="text-3xl font-bold text-red-400">{{ stats.bearish_predictions }}</p>
+        </div>
+    </div>
+
+    <!-- Predictions List -->
+    <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden animate-slide-up">
+        <div class="p-6 border-b border-white/10">
+            <h3 class="text-2xl font-bold text-white">
+                <i class="fas fa-list text-purple-400 mr-3"></i>All Predictions
+            </h3>
+        </div>
+
+        {% if predictions.items %}
+            <!-- Desktop Table -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Stock</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Current Price</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Predicted Price</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Change</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Sentiment</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/10">
+                        {% for prediction in predictions.items %}
+                            <tr class="hover:bg-white/5 transition-colors cursor-pointer" onclick="window.location.href='{{ url_for('view_prediction', prediction_id=prediction.id) }}'">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                                            <span class="text-white font-bold text-sm">{{ prediction.symbol[:2] }}</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-white font-semibold">{{ prediction.symbol }}</p>
+                                            <p class="text-gray-400 text-sm">{{ prediction.period.upper() }} Analysis</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <p class="text-white font-semibold">${{ "%.2f"|format(prediction.current_price) }}</p>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <p class="text-white font-semibold">${{ "%.2f"|format(prediction.predicted_price) }}</p>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {% if prediction.change_percent > 0 %}bg-green-600/20 text-green-400{% else %}bg-red-600/20 text-red-400{% endif %}">
+                                        {% if prediction.change_percent > 0 %}+{% endif %}{{ "%.2f"|format(prediction.change_percent) }}%
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% set sentiment = prediction.get_sentiment() %}
+                                    <div class="flex items-center">
+                                        <i class="fas {{ sentiment.icon }} {{ sentiment.class }} mr-2"></i>
+                                        <span class="{{ sentiment.class }} font-semibold">{{ sentiment.sentiment }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <p class="text-gray-300">{{ prediction.created_at.strftime('%m/%d/%Y') }}</p>
+                                    <p class="text-gray-500 text-sm">{{ prediction.get_age() }}</p>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex space-x-2">
+                                        <a href="{{ url_for('view_prediction', prediction_id=prediction.id) }}" class="text-blue-400 hover:text-blue-300 transition-colors" onclick="event.stopPropagation()">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('delete_prediction', prediction_id=prediction.id) }}" class="inline" onclick="event.stopPropagation()" onsubmit="return confirm('Are you sure you want to delete this prediction?')">
+                                            <button type="submit" class="text-red-400 hover:text-red-300 transition-colors">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="md:hidden space-y-4 p-6">
+                {% for prediction in predictions.items %}
+                    <div class="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 card-hover">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-white font-bold text-sm">{{ prediction.symbol[:2] }}</span>
+                                </div>
+                                <div>
+                                    <p class="text-white font-semibold">{{ prediction.symbol }}</p>
+                                    <p class="text-gray-400 text-sm">{{ prediction.get_age() }}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-sm font-semibold {% if prediction.change_percent > 0 %}bg-green-600/20 text-green-400{% else %}bg-red-600/20 text-red-400{% endif %}">
+                                    {% if prediction.change_percent > 0 %}+{% endif %}{{ "%.1f"|format(prediction.change_percent) }}%
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <p class="text-gray-400 text-xs">Current Price</p>
+                                <p class="text-white font-semibold">${{ "%.2f"|format(prediction.current_price) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-xs">Predicted Price</p>
+                                <p class="text-white font-semibold">${{ "%.2f"|format(prediction.predicted_price) }}</p>
+                            </div>
+                        </div>
+                        
+                        {% set sentiment = prediction.get_sentiment() %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas {{ sentiment.icon }} {{ sentiment.class }} mr-2"></i>
+                                <span class="{{ sentiment.class }} font-semibold text-sm">{{ sentiment.sentiment }}</span>
+                            </div>
+                            <div class="flex space-x-3">
+                                <a href="{{ url_for('view_prediction', prediction_id=prediction.id) }}" class="text-blue-400 hover:text-blue-300 transition-colors">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_prediction', prediction_id=prediction.id) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this prediction?')">
+                                    <button type="submit" class="text-red-400 hover:text-red-300 transition-colors">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if predictions.pages > 1 %}
+                <div class="px-6 py-4 border-t border-white/10">
+                    <div class="flex items-center justify-between">
+                        <div class="text-gray-400 text-sm">
+                            Showing {{ predictions.per_page * (predictions.page - 1) + 1 }} to 
+                            {{ predictions.per_page * predictions.page if predictions.page < predictions.pages else predictions.total }} 
+                            of {{ predictions.total }} predictions
+                        </div>
+                        <div class="flex space-x-2">
+                            {% if predictions.has_prev %}
+                                <a href="{{ url_for('prediction_history', page=predictions.prev_num) }}" 
+                                   class="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% for page_num in predictions.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != predictions.page %}
+                                        <a href="{{ url_for('prediction_history', page=page_num) }}" 
+                                           class="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                                            {{ page_num }}
+                                        </a>
+                                    {% else %}
+                                        <span class="px-3 py-2 bg-blue-600 text-white rounded-lg font-semibold">
+                                            {{ page_num }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="px-3 py-2 text-gray-400">...</span>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if predictions.has_next %}
+                                <a href="{{ url_for('prediction_history', page=predictions.next_num) }}" 
+                                   class="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-16">
+                <div class="w-20 h-20 bg-gray-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-chart-line text-gray-400 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">No Predictions Yet</h3>
+                <p class="text-gray-400 mb-6">Start making AI-powered stock predictions to see your history here.</p>
+                <a href="{{ url_for('dashboard') }}" 
+                   class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-magic mr-2"></i>Create First Prediction
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Insights -->
+    <div class="mt-8 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 animate-slide-up">
+        <h3 class="text-xl font-bold text-white mb-4">
+            <i class="fas fa-lightbulb text-yellow-400 mr-2"></i>Quick Insights
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Most Predicted Stock -->
+            <div class="text-center">
+                <h4 class="text-gray-300 text-sm font-semibold mb-2">Most Predicted Stock</h4>
+                {% if predictions.items %}
+                    {% set symbol_counts = {} %}
+                    {% for prediction in predictions.items %}
+                        {% if symbol_counts.update({prediction.symbol: symbol_counts.get(prediction.symbol, 0) + 1}) %}{% endif %}
+                    {% endfor %}
+                    {% set most_predicted = symbol_counts.items() | sort(attribute=1, reverse=true) | first %}
+                    {% if most_predicted %}
+                        <p class="text-white font-bold text-lg">{{ most_predicted[0] }}</p>
+                        <p class="text-gray-400 text-sm">{{ most_predicted[1] }} prediction{{ 's' if most_predicted[1] != 1 else '' }}</p>
+                    {% else %}
+                        <p class="text-gray-400">N/A</p>
+                    {% endif %}
+                {% else %}
+                    <p class="text-gray-400">N/A</p>
+                {% endif %}
+            </div>
+
+            <!-- Best Prediction -->
+            <div class="text-center">
+                <h4 class="text-gray-300 text-sm font-semibold mb-2">Highest Predicted Growth</h4>
+                {% if predictions.items %}
+                    {% set best_prediction = predictions.items | sort(attribute='change_percent', reverse=true) | first %}
+                    <p class="text-green-400 font-bold text-lg">{{ best_prediction.symbol }}</p>
+                    <p class="text-gray-400 text-sm">+{{ "%.1f"|format(best_prediction.change_percent) }}%</p>
+                {% else %}
+                    <p class="text-gray-400">N/A</p>
+                {% endif %}
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="text-center">
+                <h4 class="text-gray-300 text-sm font-semibold mb-2">Recent Activity</h4>
+                {% if predictions.items %}
+                    {% set recent_prediction = predictions.items | first %}
+                    <p class="text-white font-bold text-lg">{{ recent_prediction.symbol }}</p>
+                    <p class="text-gray-400 text-sm">{{ recent_prediction.get_age() }}</p>
+                {% else %}
+                    <p class="text-gray-400">N/A</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Dashboard Button -->
+    <div class="text-center mt-8">
+        <a href="{{ url_for('dashboard') }}" 
+           class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+            <i class="fas fa-arrow-left mr-3"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation delays to elements
+    const animateElements = document.querySelectorAll('.animate-fade-in, .animate-slide-up');
+    animateElements.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'all 0.6s ease';
+        
+        setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+
+    // Add hover effects to table rows
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(4px)';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+
+    // Enhanced delete confirmation
+    const deleteForms = document.querySelectorAll('form[onsubmit*="confirm"]');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const symbol = this.closest('tr')?.querySelector('.text-white.font-semibold')?.textContent || 'this prediction';
+            
+            if (confirm(`Are you sure you want to delete the prediction for ${symbol}? This action cannot be undone.`)) {
+                this.submit();
+            }
+        });
+    });
+
+    // Add keyboard navigation for table rows
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.tagName === 'TR') {
+            e.target.click();
+        }
+    });
+
+    // Show success message if prediction was just created
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'prediction_created') {
+        setTimeout(() => {
+            showNotification('Prediction saved to history successfully!', 'success');
+        }, 1000);
+    }
+});
+</script>
+
+<style>
+/* Enhanced animations */
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+/* Table row hover effects */
+tbody tr {
+    transition: all 0.3s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+}
+
+/* Mobile card animations */
+@media (max-width: 768px) {
+    .card-hover:hover {
+        transform: translateY(-2px);
+    }
+}
+
+/* Enhanced button hover effects */
+.btn-enhanced {
+    transition: all 0.3s ease;
+}
+
+.btn-enhanced:hover {
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+}
+
+/* Loading and interactive states */
+tr.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-up,
+    tbody tr,
+    .card-hover {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print,
+    .fas,
+    button {
+        display: none !important;
+    }
+    
+    table {
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Stock Predictor{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    Welcome back, {{ current_user.first_name }}! 👋
+                </h1>
+                <p class="text-gray-300 text-lg">Ready to predict the future of the stock market?</p>
+            </div>
+            <div class="text-right">
+                <p class="text-gray-400 text-sm">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+                <p class="text-blue-400 font-semibold">{{ total_predictions }} predictions made</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-8 space-y-3">
+                {% for category, message in messages %}
+                    <div class="alert p-4 rounded-lg border-l-4 {% if category == 'error' %}bg-red-900/20 border-red-500 text-red-300{% elif category == 'success' %}bg-green-900/20 border-green-500 text-green-300{% elif category == 'warning' %}bg-yellow-900/20 border-yellow-500 text-yellow-300{% else %}bg-blue-900/20 border-blue-500 text-blue-300{% endif %} animate-slide-up" data-flash-message>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas {% if category == 'error' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                                {{ message }}
+                            </div>
+                            <button data-dismiss class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Prediction Form - Main Column -->
+        <div class="lg:col-span-2">
+            <div class="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl card-hover animate-slide-up">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-magic text-purple-400 mr-3"></i>Generate New Prediction
+                    </h2>
+                    <p class="text-gray-300">Enter a stock symbol to create AI-powered price forecasts</p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('predict') }}" class="space-y-6" id="predictionForm" data-enhanced>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Stock Symbol Input -->
+                        <div class="space-y-2">
+                            {{ form.symbol.label(class="block text-sm font-semibold text-gray-200") }}
+                            <div class="relative">
+                                {{ form.symbol(class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-lg form-input", autocomplete="off") }}
+                                <div class="absolute right-3 top-4">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                            </div>
+                            {% if form.symbol.errors %}
+                                <div class="text-red-400 text-sm">
+                                    {% for error in form.symbol.errors %}
+                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="text-xs text-gray-400">Enter a valid NYSE/NASDAQ ticker symbol</p>
+                        </div>
+                        
+                        <!-- Time Period Selection -->
+                        <div class="space-y-2">
+                            {{ form.period.label(class="block text-sm font-semibold text-gray-200") }}
+                            {{ form.period(class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-lg") }}
+                            <p class="text-xs text-gray-400">More data improves prediction accuracy</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="text-center pt-4">
+                        {{ form.submit(class="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-lg rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl btn-enhanced", id="submitBtn") }}
+                    </div>
+                </form>
+                
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="hidden text-center py-12">
+                    <div class="inline-flex items-center space-x-4">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+                        <div class="text-left">
+                            <p class="text-white font-semibold text-lg">Training AI Model</p>
+                            <p class="text-gray-300 text-sm">Analyzing patterns and generating predictions...</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-gray-700/30 rounded-full h-2 max-w-md mx-auto">
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full animate-pulse" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stock Buttons -->
+            <div class="mt-8 animate-slide-up">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-bolt text-yellow-400 mr-2"></i>Quick Predictions
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {% set popular_stocks = [
+                        ('AAPL', 'Apple', 'fab fa-apple', 'from-gray-500 to-gray-700'),
+                        ('GOOGL', 'Google', 'fab fa-google', 'from-blue-500 to-green-500'),
+                        ('TSLA', 'Tesla', 'fas fa-car', 'from-red-500 to-pink-500'),
+                        ('MSFT', 'Microsoft', 'fab fa-microsoft', 'from-blue-600 to-cyan-500'),
+                        ('AMZN', 'Amazon', 'fab fa-amazon', 'from-yellow-500 to-orange-500'),
+                        ('META', 'Meta', 'fab fa-facebook', 'from-blue-600 to-purple-600'),
+                        ('NFLX', 'Netflix', 'fas fa-video', 'from-red-600 to-red-800'),
+                        ('NVDA', 'NVIDIA', 'fas fa-microchip', 'from-green-500 to-emerald-600')
+                    ] %}
+                    {% for symbol, name, icon, gradient in popular_stocks %}
+                        <button class="stock-quick-btn p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl transition-all duration-300 transform hover:scale-105 group" data-symbol="{{ symbol }}">
+                            <div class="w-10 h-10 bg-gradient-to-r {{ gradient }} rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                                <i class="{{ icon }} text-white"></i>
+                            </div>
+                            <p class="text-white font-semibold text-sm">{{ symbol }}</p>
+                            <p class="text-gray-400 text-xs">{{ name }}</p>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-8">
+            <!-- User Stats -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-xl animate-slide-up">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-chart-bar text-green-400 mr-2"></i>Your Stats
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Total Predictions</span>
+                        <span class="text-white font-bold text-lg">{{ total_predictions }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Member Since</span>
+                        <span class="text-blue-400 font-semibold">{{ current_user.created_at.strftime('%b %Y') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Last Login</span>
+                        <span class="text-purple-400 font-semibold">
+                            {% if current_user.last_login %}
+                                {{ current_user.last_login.strftime('%m/%d') }}
+                            {% else %}
+                                Today
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-white/10">
+                    <a href="{{ url_for('prediction_history') }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 btn-enhanced">
+                        <i class="fas fa-history mr-2"></i>View All History
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Predictions -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-xl animate-slide-up">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-clock text-blue-400 mr-2"></i>Recent Predictions
+                </h3>
+                {% if recent_predictions %}
+                    <div class="space-y-3">
+                        {% for prediction in recent_predictions %}
+                            <div class="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors cursor-pointer group" onclick="window.location.href='{{ url_for('view_prediction', prediction_id=prediction.id) }}'">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-white font-semibold group-hover:text-blue-400 transition-colors">{{ prediction.symbol }}</p>
+                                        <p class="text-gray-400 text-xs">{{ prediction.get_age() }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm {% if prediction.change_percent > 0 %}text-green-400{% else %}text-red-400{% endif %} font-semibold">
+                                            {% if prediction.change_percent > 0 %}+{% endif %}{{ "%.1f"|format(prediction.change_percent) }}%
+                                        </p>
+                                        <p class="text-gray-400 text-xs">${{ "%.2f"|format(prediction.predicted_price) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-chart-line text-gray-500 text-3xl mb-3"></i>
+                        <p class="text-gray-400">No predictions yet</p>
+                        <p class="text-gray-500 text-sm">Create your first prediction above!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-xl animate-slide-up">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-zap text-yellow-400 mr-2"></i>Quick Actions
+                </h3>
+                <div class="space-y-3">
+                    <a href="{{ url_for('prediction_history') }}" class="w-full inline-flex items-center px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-lg transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-history text-blue-400 mr-3"></i>
+                        <span>View History</span>
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="w-full inline-flex items-center px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-lg transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-user text-green-400 mr-3"></i>
+                        <span>Profile Settings</span>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="w-full inline-flex items-center px-4 py-3 bg-white/5 hover:bg-red-600/20 border border-white/10 hover:border-red-500/50 text-white hover:text-red-300 rounded-lg transition-all duration-300">
+                        <i class="fas fa-sign-out-alt text-red-400 mr-3"></i>
+                        <span>Sign Out</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('predictionForm');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const symbolInput = document.querySelector('input[name="symbol"]');
+    
+    // Handle quick stock buttons
+    const quickButtons = document.querySelectorAll('.stock-quick-btn');
+    quickButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const symbol = this.getAttribute('data-symbol');
+            if (symbolInput) {
+                symbolInput.value = symbol;
+                symbolInput.focus();
+                
+                // Add visual feedback
+                this.classList.add('scale-95');
+                setTimeout(() => {
+                    this.classList.remove('scale-95');
+                }, 150);
+            }
+        });
+    });
+    
+    // Input validation and styling
+    if (symbolInput) {
+        symbolInput.addEventListener('input', function() {
+            // Convert to uppercase and remove invalid characters
+            this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '');
+            
+            // Limit length
+            if (this.value.length > 5) {
+                this.value = this.value.substring(0, 5);
+            }
+            
+            // Add visual feedback for valid symbols
+            if (this.value.length >= 2) {
+                this.classList.add('ring-2', 'ring-green-500');
+                this.classList.remove('ring-red-500');
+            } else {
+                this.classList.remove('ring-green-500');
+            }
+        });
+        
+        symbolInput.addEventListener('blur', function() {
+            if (this.value.length < 1) {
+                this.classList.add('ring-2', 'ring-red-500');
+            }
+        });
+        
+        // Focus on symbol input when page loads
+        symbolInput.focus();
+    }
+    
+    // Add animation delays to elements
+    const animateElements = document.querySelectorAll('.animate-fade-in, .animate-slide-up');
+    animateElements.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'all 0.6s ease';
+        
+        setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+
+    // Enhanced form submission handling
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                // Show loading overlay from base.html
+                showLoadingOverlay();
+            }
+        });
+    }
+
+    // Add keyboard shortcuts for quick stock selection
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey) {
+            const quickStocks = {
+                '1': 'AAPL',
+                '2': 'GOOGL', 
+                '3': 'TSLA',
+                '4': 'MSFT',
+                '5': 'AMZN',
+                '6': 'META',
+                '7': 'NFLX',
+                '8': 'NVDA'
+            };
+            
+            if (quickStocks[e.key] && symbolInput) {
+                e.preventDefault();
+                symbolInput.value = quickStocks[e.key];
+                symbolInput.focus();
+                showNotification(`Selected ${quickStocks[e.key]}`, 'info');
+            }
+        }
+    });
+
+    // Add success feedback for form interaction
+    const formElements = form.querySelectorAll('input, select');
+    formElements.forEach(element => {
+        element.addEventListener('focus', function() {
+            this.parentElement.classList.add('pulse-glow');
+        });
+        
+        element.addEventListener('blur', function() {
+            this.parentElement.classList.remove('pulse-glow');
+        });
+    });
+});
+</script>
+
+<style>
+/* Additional CSS for dashboard-specific styling */
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced hover effects for recent predictions */
+.group:hover .group-hover\:text-blue-400 {
+    color: #60a5fa !important;
+}
+
+/* Quick stock button enhancements */
+.stock-quick-btn:hover {
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+}
+
+/* Form input enhancements */
+.form-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Loading state improvements */
+#loadingIndicator {
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .text-4xl {
+        font-size: 2rem;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .px-12 {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-up {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}
+</style>
+{% endblock %}

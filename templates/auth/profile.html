@@ -1,0 +1,684 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings - AI Stock Predictor{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    <i class="fas fa-user text-purple-400 mr-3"></i>Profile Settings
+                </h1>
+                <p class="text-gray-300 text-lg">Manage your account and view your statistics</p>
+            </div>
+            <div class="text-right">
+                <a href="{{ url_for('dashboard') }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-8 space-y-3">
+                {% for category, message in messages %}
+                    <div class="alert p-4 rounded-lg border-l-4 {% if category == 'error' %}bg-red-900/20 border-red-500 text-red-300{% elif category == 'success' %}bg-green-900/20 border-green-500 text-green-300{% elif category == 'warning' %}bg-yellow-900/20 border-yellow-500 text-yellow-300{% else %}bg-blue-900/20 border-blue-500 text-blue-300{% endif %} animate-slide-up" data-flash-message>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas {% if category == 'error' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                                {{ message }}
+                            </div>
+                            <button data-dismiss class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Profile Information -->
+        <div class="lg:col-span-2">
+            <div class="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl animate-slide-up">
+                <div class="flex items-center mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center mr-6 shadow-lg">
+                        <span class="text-white font-bold text-2xl">{{ user.first_name[0].upper() }}{{ user.last_name[0].upper() }}</span>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-bold text-white mb-2">{{ user.get_full_name() }}</h2>
+                        <p class="text-gray-300 text-lg">@{{ user.username }}</p>
+                        <p class="text-gray-400 text-sm">{{ user.email }}</p>
+                    </div>
+                </div>
+
+                <!-- Account Information -->
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <h3 class="text-lg font-semibold text-white mb-2">
+                                <i class="fas fa-calendar text-blue-400 mr-2"></i>Member Since
+                            </h3>
+                            <p class="text-gray-300">{{ stats.member_since }}</p>
+                            <p class="text-gray-400 text-sm">{{ stats.account_age_days }} days ago</p>
+                        </div>
+
+                        <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <h3 class="text-lg font-semibold text-white mb-2">
+                                <i class="fas fa-clock text-green-400 mr-2"></i>Last Login
+                            </h3>
+                            <p class="text-gray-300">{{ stats.last_login }}</p>
+                        </div>
+
+                        <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <h3 class="text-lg font-semibold text-white mb-2">
+                                <i class="fas fa-chart-line text-purple-400 mr-2"></i>Total Predictions
+                            </h3>
+                            <p class="text-white text-2xl font-bold">{{ stats.total_predictions }}</p>
+                        </div>
+
+                        <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <h3 class="text-lg font-semibold text-white mb-2">
+                                <i class="fas fa-shield-alt text-yellow-400 mr-2"></i>Account Status
+                            </h3>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-600/20 text-green-400">
+                                <i class="fas fa-check-circle mr-2"></i>Active
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Account Actions -->
+                    <div class="border-t border-white/10 pt-6">
+                        <h3 class="text-xl font-bold text-white mb-4">
+                            <i class="fas fa-cog text-blue-400 mr-2"></i>Account Actions
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <a href="{{ url_for('prediction_history') }}" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-600/30">
+                                <i class="fas fa-history mr-2"></i>View Prediction History
+                            </a>
+                            <button class="inline-flex items-center justify-center px-6 py-3 bg-green-600/20 hover:bg-green-600/40 text-green-300 rounded-lg transition-all duration-300 transform hover:scale-105 border border-green-600/30" onclick="exportData()">
+                                <i class="fas fa-download mr-2"></i>Export My Data
+                            </button>
+                            <button class="inline-flex items-center justify-center px-6 py-3 bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-300 rounded-lg transition-all duration-300 transform hover:scale-105 border border-yellow-600/30" onclick="openPasswordModal()">
+                                <i class="fas fa-key mr-2"></i>Change Password
+                            </button>
+                            <button class="inline-flex items-center justify-center px-6 py-3 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-lg transition-all duration-300 transform hover:scale-105 border border-red-600/30" onclick="deleteAccount()">
+                                <i class="fas fa-trash mr-2"></i>Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Statistics -->
+        <div class="space-y-6">
+            <!-- Recent Activity -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-xl animate-slide-up">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-chart-bar text-green-400 mr-2"></i>Recent Predictions
+                </h3>
+                {% if recent_predictions %}
+                    <div class="space-y-3">
+                        {% for prediction in recent_predictions %}
+                            <div class="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors cursor-pointer group" onclick="window.location.href='{{ url_for('view_prediction', prediction_id=prediction.id) }}'">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-white font-semibold group-hover:text-blue-400 transition-colors">{{ prediction.symbol }}</p>
+                                        <p class="text-gray-400 text-xs">{{ prediction.get_age() }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm {% if prediction.change_percent > 0 %}text-green-400{% else %}text-red-400{% endif %} font-semibold">
+                                            {% if prediction.change_percent > 0 %}+{% endif %}{{ "%.1f"|format(prediction.change_percent) }}%
+                                        </p>
+                                        <p class="text-gray-400 text-xs">${{ "%.2f"|format(prediction.predicted_price) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-white/10">
+                        <a href="{{ url_for('prediction_history') }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-eye mr-2"></i>View All History
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-6">
+                        <i class="fas fa-chart-line text-gray-500 text-2xl mb-3"></i>
+                        <p class="text-gray-400">No predictions yet</p>
+                        <a href="{{ url_for('dashboard') }}" class="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm font-semibold mt-2">
+                            Create your first prediction
+                            <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Account Summary -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-xl animate-slide-up">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-info-circle text-purple-400 mr-2"></i>Account Summary
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Account Type</span>
+                        <span class="text-green-400 font-semibold">Free</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Predictions Made</span>
+                        <span class="text-white font-bold">{{ stats.total_predictions }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Storage Used</span>
+                        <span class="text-blue-400 font-semibold">{{ "%.1f"|format((stats.total_predictions * 2.5) / 1024) }} KB</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Member Level</span>
+                        <span class="text-purple-400 font-semibold">
+                            {% if stats.total_predictions >= 100 %}
+                                Expert
+                            {% elif stats.total_predictions >= 50 %}
+                                Advanced
+                            {% elif stats.total_predictions >= 10 %}
+                                Intermediate
+                            {% else %}
+                                Beginner
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips & Tricks -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-xl animate-slide-up">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-lightbulb text-yellow-400 mr-2"></i>Tips & Tricks
+                </h3>
+                <div class="space-y-3 text-sm text-gray-300">
+                    <div class="flex items-start">
+                        <i class="fas fa-check text-green-400 mr-2 mt-1 flex-shrink-0"></i>
+                        <span>Use longer analysis periods for more accurate predictions</span>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-check text-green-400 mr-2 mt-1 flex-shrink-0"></i>
+                        <span>Compare multiple stocks before making investment decisions</span>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-check text-green-400 mr-2 mt-1 flex-shrink-0"></i>
+                        <span>Review your prediction history to track accuracy</span>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-check text-green-400 mr-2 mt-1 flex-shrink-0"></i>
+                        <span>Use AI predictions as one factor in your research</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="passwordModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center">
+    <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 max-w-md mx-4 border border-white/20">
+        <h3 class="text-xl font-bold text-white mb-4">
+            <i class="fas fa-key text-yellow-400 mr-2"></i>Change Password
+        </h3>
+        <form id="passwordForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-200 mb-2">Current Password</label>
+                <div class="relative">
+                    <input type="password" id="currentPassword" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter current password" required>
+                    <button type="button" onclick="togglePasswordVisibility('currentPassword', 'currentToggle')" class="absolute right-3 top-3 text-gray-400 hover:text-white transition-colors">
+                        <i id="currentToggle" class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-200 mb-2">New Password</label>
+                <div class="relative">
+                    <input type="password" id="newPassword" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter new password" required>
+                    <button type="button" onclick="togglePasswordVisibility('newPassword', 'newToggle')" class="absolute right-3 top-3 text-gray-400 hover:text-white transition-colors">
+                        <i id="newToggle" class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <!-- Password strength indicator -->
+                <div class="mt-2">
+                    <div class="flex space-x-1">
+                        <div id="strength1" class="h-1 w-1/4 bg-gray-600 rounded"></div>
+                        <div id="strength2" class="h-1 w-1/4 bg-gray-600 rounded"></div>
+                        <div id="strength3" class="h-1 w-1/4 bg-gray-600 rounded"></div>
+                        <div id="strength4" class="h-1 w-1/4 bg-gray-600 rounded"></div>
+                    </div>
+                    <p id="strengthText" class="text-xs text-gray-400 mt-1">Password strength</p>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-200 mb-2">Confirm New Password</label>
+                <div class="relative">
+                    <input type="password" id="confirmPassword" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Confirm new password" required>
+                    <button type="button" onclick="togglePasswordVisibility('confirmPassword', 'confirmToggle')" class="absolute right-3 top-3 text-gray-400 hover:text-white transition-colors">
+                        <i id="confirmToggle" class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex space-x-4 mt-6">
+                <button type="submit" id="passwordSubmitBtn" class="flex-1 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold rounded-xl transition-all duration-300">
+                    <span id="passwordBtnText">Update Password</span>
+                </button>
+                <button type="button" onclick="closePasswordModal()" class="flex-1 py-3 bg-gray-600/20 hover:bg-gray-600/40 text-gray-300 font-bold rounded-xl transition-all duration-300">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Password modal functionality
+function openPasswordModal() {
+    document.getElementById('passwordModal').classList.remove('hidden');
+    document.getElementById('passwordModal').classList.add('flex');
+    document.getElementById('currentPassword').focus();
+}
+
+function closePasswordModal() {
+    document.getElementById('passwordModal').classList.add('hidden');
+    document.getElementById('passwordModal').classList.remove('flex');
+    document.getElementById('passwordForm').reset();
+    resetPasswordStrength();
+}
+
+// Password visibility toggle
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Password strength checker
+function getPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 6) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    return Math.min(strength, 4);
+}
+
+function updatePasswordStrength(strength) {
+    const indicators = ['strength1', 'strength2', 'strength3', 'strength4'];
+    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+    const texts = ['Very Weak', 'Weak', 'Fair', 'Strong'];
+    
+    // Reset all indicators
+    indicators.forEach(id => {
+        const element = document.getElementById(id);
+        element.className = 'h-1 w-1/4 bg-gray-600 rounded';
+    });
+    
+    // Update based on strength
+    for (let i = 0; i < strength; i++) {
+        const element = document.getElementById(indicators[i]);
+        element.className = `h-1 w-1/4 ${colors[Math.min(strength - 1, 3)]} rounded`;
+    }
+    
+    // Update text
+    const strengthText = document.getElementById('strengthText');
+    if (strength > 0) {
+        strengthText.textContent = `Password strength: ${texts[Math.min(strength - 1, 3)]}`;
+        strengthText.className = `text-xs mt-1 ${strength >= 3 ? 'text-green-400' : strength >= 2 ? 'text-yellow-400' : 'text-red-400'}`;
+    } else {
+        strengthText.textContent = 'Password strength';
+        strengthText.className = 'text-xs text-gray-400 mt-1';
+    }
+}
+
+function resetPasswordStrength() {
+    const indicators = ['strength1', 'strength2', 'strength3', 'strength4'];
+    indicators.forEach(id => {
+        const element = document.getElementById(id);
+        element.className = 'h-1 w-1/4 bg-gray-600 rounded';
+    });
+    document.getElementById('strengthText').textContent = 'Password strength';
+    document.getElementById('strengthText').className = 'text-xs text-gray-400 mt-1';
+}
+
+// Password form submission
+document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const submitBtn = document.getElementById('passwordSubmitBtn');
+    const btnText = document.getElementById('passwordBtnText');
+    
+    // Client-side validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showNotification('New passwords do not match', 'error');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showNotification('New password must be at least 6 characters long', 'error');
+        return;
+    }
+    
+    if (currentPassword === newPassword) {
+        showNotification('New password must be different from current password', 'error');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    btnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+    
+    try {
+        const formData = new FormData();
+        formData.append('current_password', currentPassword);
+        formData.append('new_password', newPassword);
+        formData.append('confirm_password', confirmPassword);
+        
+        const response = await fetch('/change-password', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closePasswordModal();
+            // Optionally redirect to login page
+            // setTimeout(() => { window.location.href = '/logout'; }, 2000);
+        } else {
+            showNotification(data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Network error. Please try again.', 'error');
+    } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        btnText.textContent = 'Update Password';
+    }
+});
+
+// Initialize password strength checker
+document.getElementById('newPassword').addEventListener('input', function() {
+    const strength = getPasswordStrength(this.value);
+    updatePasswordStrength(strength);
+});
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('passwordModal');
+    if (e.target === modal) {
+        closePasswordModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closePasswordModal();
+    }
+});
+
+// Other functions (export data, delete account)
+function exportData() {
+    showNotification('Preparing your data export...', 'info');
+    
+    const userData = {
+        profile: {
+            name: '{{ user.get_full_name() }}',
+            username: '{{ user.username }}',
+            email: '{{ user.email }}',
+            memberSince: '{{ user.created_at.isoformat() }}',
+            totalPredictions: {{ stats.total_predictions }}
+        },
+        exportDate: new Date().toISOString(),
+        note: 'This is a sample export. In a production app, this would include all your prediction data.'
+    };
+    
+    const dataStr = JSON.stringify(userData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'my-stock-predictor-data.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification('Data export downloaded successfully!', 'success');
+}
+
+function deleteAccount() {
+    const confirmation = confirm(
+        'Are you sure you want to delete your account?\n\n' +
+        'This will permanently delete:\n' +
+        '• Your profile and account information\n' +
+        '• All your prediction history\n' +
+        '• All saved data\n\n' +
+        'This action cannot be undone.'
+    );
+    
+    if (confirmation) {
+        const finalConfirmation = confirm(
+            'This is your final warning!\n\n' +
+            'Type "DELETE" in the next prompt to confirm account deletion.'
+        );
+        
+        if (finalConfirmation) {
+            const deleteConfirmation = prompt('Type "DELETE" to confirm:');
+            if (deleteConfirmation === 'DELETE') {
+                showNotification('Account deletion functionality would be implemented here', 'warning');
+                // window.location.href = '/delete-account'; // Uncomment for real implementation
+            } else {
+                showNotification('Account deletion cancelled', 'info');
+            }
+        }
+    }
+}
+
+// Notification function (if not already defined)
+function showNotification(message, type, duration = 5000) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 max-w-sm bg-white/10 backdrop-blur-lg rounded-lg shadow-lg border border-white/20 p-4 transform transition-all duration-300 translate-x-full z-50`;
+    
+    // Style based on type
+    let borderColor = 'border-blue-500/50';
+    let iconClass = 'fa-info-circle text-blue-400';
+    
+    switch (type) {
+        case 'success':
+            borderColor = 'border-green-500/50';
+            iconClass = 'fa-check-circle text-green-400';
+            break;
+        case 'error':
+            borderColor = 'border-red-500/50';
+            iconClass = 'fa-exclamation-triangle text-red-400';
+            break;
+        case 'warning':
+            borderColor = 'border-yellow-500/50';
+            iconClass = 'fa-exclamation-circle text-yellow-400';
+            break;
+    }
+    
+    notification.className += ` ${borderColor}`;
+    
+    notification.innerHTML = `
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas ${iconClass} mr-3"></i>
+                <span class="text-white font-medium">${message}</span>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-300 hover:text-white transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Auto-remove after duration
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, duration);
+}
+
+// Initialize page animations
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation delays to elements
+    const animateElements = document.querySelectorAll('.animate-fade-in, .animate-slide-up');
+    animateElements.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'all 0.6s ease';
+        
+        setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+
+    // Handle flash message dismissal
+    const flashMessages = document.querySelectorAll('[data-flash-message]');
+    flashMessages.forEach(message => {
+        const dismissButton = message.querySelector('[data-dismiss]');
+        if (dismissButton) {
+            dismissButton.addEventListener('click', () => {
+                message.style.transform = 'translateX(100%)';
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 300);
+            });
+        }
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (message.parentElement) {
+                message.style.transform = 'translateX(100%)';
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 300);
+            }
+        }, 5000);
+    });
+});
+</script>
+
+<style>
+/* Profile-specific animations */
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced hover effects */
+.group:hover .group-hover\:text-blue-400 {
+    color: #60a5fa !important;
+}
+
+/* Modal backdrop blur */
+#passwordModal {
+    backdrop-filter: blur(10px);
+}
+
+/* Form styling improvements */
+input:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Button hover effects */
+button:hover {
+    transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .text-4xl {
+        font-size: 2rem;
+    }
+    
+    .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .w-20 {
+        width: 4rem;
+        height: 4rem;
+    }
+    
+    .text-2xl {
+        font-size: 1.5rem;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-up {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}
+</style>
+{% endblock %}
