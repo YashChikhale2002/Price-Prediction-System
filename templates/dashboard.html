@@ -79,7 +79,7 @@
                         <!-- Time Period Selection -->
                         <div class="space-y-2">
                             {{ form.period.label(class="block text-sm font-semibold text-gray-200") }}
-                            {{ form.period(class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-lg") }}
+                            {{ form.period(class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-lg dropdown-select") }}
                             <p class="text-xs text-gray-400">More data improves prediction accuracy</p>
                         </div>
                     </div>
@@ -385,6 +385,20 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Form input enhancements */
 .form-input:focus {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Dropdown select styling fix */
+.dropdown-select option {
+    background-color: #1f2937 !important; /* Dark gray background */
+    color: #ffffff !important; /* White text */
+    padding: 8px 12px !important;
+}
+
+.dropdown-select option:hover,
+.dropdown-select option:focus,
+.dropdown-select option:checked {
+    background-color: #374151 !important; /* Slightly lighter gray on hover */
+    color: #ffffff !important;
 }
 
 /* Loading state improvements */
