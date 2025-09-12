@@ -531,9 +531,6 @@ def delete_prediction(prediction_id):
     
     return redirect(url_for('prediction_history'))
 
-
-# Add this route to your app.py file (after the existing routes)
-
 @app.route('/change-password', methods=['POST'])
 @login_required
 def change_password():
@@ -597,6 +594,68 @@ def change_password():
             'success': False,
             'message': 'An error occurred while changing password. Please try again.'
         }), 500
+
+@app.route('/auth/delete-account', methods=['POST'])
+@login_required
+def delete_account():
+    """Delete user account permanently - FIXED VERSION"""
+    try:
+        # Get user information BEFORE any operations
+        user_id = current_user.id
+        username = current_user.username
+        full_name = current_user.get_full_name()
+        
+        print(f"🗑️ Starting account deletion for user: {username} (ID: {user_id})")
+        
+        # Query the user from database to get a fresh instance
+        user_to_delete = User.query.get(user_id)
+        if not user_to_delete:
+            raise ValueError("User not found in database")
+        
+        # Delete all associated prediction history manually (ensure cascade works)
+        predictions_deleted = PredictionHistory.query.filter_by(user_id=user_id).delete()
+        print(f"🗑️ Deleted {predictions_deleted} predictions for user {username}")
+        
+        # Delete the user account
+        db.session.delete(user_to_delete)
+        
+        # Commit the transaction before logging out
+        db.session.commit()
+        print(f"✅ Successfully deleted account from database for user: {username}")
+        
+        # Now logout the user (after successful deletion)
+        logout_user()
+        print(f"✅ User {username} logged out successfully")
+        
+        # Return JSON response for AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': True,
+                'message': f'Account for {full_name} ({username}) has been permanently deleted.',
+                'redirect': url_for('index')
+            })
+        else:
+            # Handle regular form submission
+            flash(f'Account {username} has been permanently deleted.', 'info')
+            return redirect(url_for('index'))
+        
+    except Exception as e:
+        db.session.rollback()
+        error_msg = str(e)
+        print(f"❌ Error deleting account: {error_msg}")
+        print(f"❌ Error type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        
+        # Return error response
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'message': f'Failed to delete account: {error_msg}'
+            }), 500
+        else:
+            flash('Error deleting account. Please try again.', 'error')
+            return redirect(url_for('profile'))
 
 @app.route('/profile')
 @login_required

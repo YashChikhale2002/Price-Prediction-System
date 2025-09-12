@@ -107,7 +107,7 @@
                             <button class="inline-flex items-center justify-center px-6 py-3 bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-300 rounded-lg transition-all duration-300 transform hover:scale-105 border border-yellow-600/30" onclick="openPasswordModal()">
                                 <i class="fas fa-key mr-2"></i>Change Password
                             </button>
-                            <button class="inline-flex items-center justify-center px-6 py-3 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-lg transition-all duration-300 transform hover:scale-105 border border-red-600/30" onclick="deleteAccount()">
+                            <button id="deleteAccountBtn" class="inline-flex items-center justify-center px-6 py-3 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-lg transition-all duration-300 transform hover:scale-105 border border-red-600/30" onclick="deleteAccount()">
                                 <i class="fas fa-trash mr-2"></i>Delete Account
                             </button>
                         </div>
@@ -445,7 +445,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Other functions (export data, delete account)
+// Export data function
 function exportData() {
     showNotification('Preparing your data export...', 'info');
     
@@ -476,6 +476,7 @@ function exportData() {
     showNotification('Data export downloaded successfully!', 'success');
 }
 
+// FIXED DELETE ACCOUNT FUNCTION
 function deleteAccount() {
     const confirmation = confirm(
         'Are you sure you want to delete your account?\n\n' +
@@ -493,13 +494,68 @@ function deleteAccount() {
         );
         
         if (finalConfirmation) {
-            const deleteConfirmation = prompt('Type "DELETE" to confirm:');
+            const deleteConfirmation = prompt('Type "DELETE" to confirm (case sensitive):');
             if (deleteConfirmation === 'DELETE') {
-                showNotification('Account deletion functionality would be implemented here', 'warning');
-                // window.location.href = '/delete-account'; // Uncomment for real implementation
+                // Show loading state
+                showNotification('Processing account deletion...', 'warning');
+                
+                // Disable the delete button to prevent multiple clicks
+                const deleteButton = document.getElementById('deleteAccountBtn');
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
+                }
+                
+                // Make the actual deletion request
+                fetch('/auth/delete-account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Failed to delete account');
+                        });
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Account deleted successfully. You will be redirected in 3 seconds...', 'success');
+                        
+                        // Clear any stored data
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        
+                        // Redirect to home page after a short delay
+                        setTimeout(() => {
+                            window.location.href = data.redirect || '/';
+                        }, 3000);
+                    } else {
+                        throw new Error(data.message || 'Failed to delete account');
+                    }
+                })
+                .catch(error => {
+                    console.error('Delete account error:', error);
+                    showNotification('Error deleting account: ' + error.message, 'error');
+                    
+                    // Re-enable the button on error
+                    if (deleteButton) {
+                        deleteButton.disabled = false;
+                        deleteButton.innerHTML = '<i class="fas fa-trash mr-2"></i>Delete Account';
+                    }
+                });
             } else {
-                showNotification('Account deletion cancelled', 'info');
+                showNotification('Account deletion cancelled - you must type "DELETE" exactly', 'info');
             }
+        } else {
+            showNotification('Account deletion cancelled', 'info');
         }
     }
 }
